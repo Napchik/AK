@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2017, GlobalLogic Ukraine LLC
  * All rights reserved.
@@ -16,7 +17,7 @@
  *    names of its contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY GLOBALLOGIC UKRAINE LLC `AS IS` AND ANY
+ * THIS SOFTWARE IS PROVIDED BY GLOBALLOGIC UKRAINE LLC ``AS IS`` AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL GLOBALLOGIC UKRAINE LLC BE LIABLE FOR ANY
@@ -38,16 +39,16 @@
 #include <linux/ktime.h>
 
 MODULE_AUTHOR("Shikalovskyi Mikhail <mikhail232003@gmail.com>");
-MODULE_DESCRIPTION("Linux Kernel Training: Hello, world");
+MODULE_DESCRIPTION("Hello, world in Linux Kernel Training");
 MODULE_LICENSE("Dual BSD/GPL");
 
 static unsigned int count = 1;
-module_param(count, uint, 0644); // Визначення параметра
-MODULE_PARM_DESC(count, "Скільки разів вивести рядок 'Hello, world!'");
+module_param(count, uint, 0644); // Р’РёР·РЅР°С‡РµРЅРЅСЏ РїР°СЂР°РјРµС‚СЂР°
+MODULE_PARM_DESC(count, "РЎРєС–Р»СЊРєРё СЂР°Р·С–РІ РІРёРІРµСЃС‚Рё СЂСЏРґРѕРє 'Hello, world!'");
 
-struct event_data { //Оголошуємо структуру даних
- struct list_head list;
- ktime_t timestamp;
+struct event_data { //РћРіРѕР»РѕС€СѓС”РјРѕ СЃС‚СЂСѓРєС‚СѓСЂСѓ РґР°РЅРёС…
+	struct list_head list;
+	ktime_t timestamp;
 };
 
 static LIST_HEAD(event_list);
@@ -55,33 +56,36 @@ static LIST_HEAD(event_list);
 
 static int __init hello_init(void)
 {
- if (count == 0 || (count >= 5 && count <= 10)) {
-  pr_warn("Зауваження до параметру count.\n");
- } else if (count > 10) {
-  pr_err("count > 10. Модуль не завантажено.\n");
- return -EINVAL;
+	if (count == 0 || (count >= 5 && count <= 10)) {
+		pr_warn("РќРµРІС–СЂРЅРµ Р·РЅР°С‡РµРЅРЅСЏ count(>=5 && <=10).\n");
+	} else if (count > 10) {
+	BUG(1);
+        }
+
+
+	int i;
+	for (i = 0; i < count; i++) {
+		struct event_data *event = kmalloc(sizeof(*event), GFP_KERNEL);
+		if(i==5){
+			event=0;
+		}
+		
+		event->timestamp = ktime_get();
+		list_add(&event->list, &event_list);
+		printk(KERN_EMERG "Hello, world!\n");		
 }
 
-
- int i;
- for (i = 0; i < count; i++) {
-  printk(KERN_EMERG "Hello, world!\n");
-  struct event_data *event = kmalloc(sizeof(*event), GFP_KERNEL);
-  event->timestamp = ktime_get();
-  list_add(&event->list, &event_list);
-}
-
- return 0;
+	return 0;
 }
 
 static void __exit hello_exit(void)
 {
- struct event_data *event, *temp;
- list_for_each_entry_safe(event, temp, &event_list, list) {
- ktime_t duration = ktime_sub(ktime_get(), event->timestamp);
- pr_info("Час події: %lld нс\n", ktime_to_ns(duration));
- list_del(&event->list);
- kfree(event); }
+	struct event_data *event, *temp;
+	list_for_each_entry_safe(event, temp, &event_list, list) {
+		ktime_t duration = ktime_sub(ktime_get(), event->timestamp);
+		pr_info("Р§Р°СЃ РїРѕРґС–С—: %lld РЅСЃ\n", ktime_to_ns(duration));
+		list_del(&event->list);
+		kfree(event); }
 }
 
 module_init(hello_init);
